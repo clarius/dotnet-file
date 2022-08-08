@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,maximum-scale=2">
+    <link rel="stylesheet" type="text/css" media="screen" href="/dotnet-file/assets/css/style.css?v=90969aa5da09c11b3e4119b361fac3aa93e5635e">
+
+<!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>dotnet-file | Download, update and sync loose files from URLs</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="dotnet-file" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Download, update and sync loose files from URLs" />
+<meta property="og:description" content="Download, update and sync loose files from URLs" />
+<meta property="og:site_name" content="dotnet-file" />
+<script type="application/ld+json">
+{"@type":"WebSite","headline":"dotnet-file","url":"/dotnet-file/","description":"Download, update and sync loose files from URLs","name":"dotnet-file","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/devlooped/dotnet-file">View on GitHub</a>
+
+          <h1 id="project_title">dotnet-file</h1>
+          <h2 id="project_tagline">Download, update and sync loose files from URLs</h2>
+
+          
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1 id="-dotnet-file"><img src="https://raw.githubusercontent.com/devlooped/dotnet-file/main/docs/img/icon-32.png" alt="Icon" /> dotnet-file</h1>
+
+<p>A dotnet global tool for downloading and updating loose files from arbitrary URLs.</p>
+
+<p><a href="https://www.nuget.org/packages/dotnet-file"><img src="https://img.shields.io/nuget/v/dotnet-file.svg?color=royalblue" alt="Version" /></a>
+<a href="https://www.nuget.org/packages/dotnet-file"><img src="https://img.shields.io/nuget/dt/dotnet-file.svg?color=darkmagenta" alt="Downloads" /></a>
+<a href="https://github.com/devlooped/dotnet-file/blob/master/LICENSE"><img src="https://img.shields.io/github/license/devlooped/dotnet-file.svg?color=blue" alt="License" /></a></p>
+
+<p>Installing or updating (same command can be used for both):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dotnet tool update -g dotnet-file
+</code></pre></div></div>
+
+<p>To get the CI version:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dotnet tool update -g dotnet-file --no-cache --add-source https://pkg.kzu.io/index.json
+</code></pre></div></div>
+
+<p>Usage:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dotnet file [add|changes|delete|list|sync|update] [file or url]*
+
+Actions
+    add        downloads a file or GitHub repository or directory from a URL
+    changes    checks remote URLs for changes and lists the status of local files
+    delete     deletes a file and its corresponding config entry from the local directory
+    init       initializes the local directory from one or more remote .netconfig files
+    list       lists the config entries and the status of their corresponding files
+    sync       synchronizes with remote URLs, deleting local files and directories as needed
+    update     updates local files from remote URLs, does not prune deleted remote files
+
+Status
+  = &lt;- [url]   remote file equals local file
+  ✓ &lt;- [url]   local file updated with remote file
+  ^ &lt;- [url]   remote file is newer (ETags mismatch)
+  ? &lt;- [url]   local file not found for remote file
+  x &lt;- [url]   error processing the entry
+</code></pre></div></div>
+
+<p>All arguments after the action are tried for URL parsing automatically to 
+disambiguate file (local path) from url (remote file location).</p>
+
+<p>Examples:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>dotnet file init [url]          // seeds the current directory with all files/URLs listed in a remote URL
+dotnet file add [url]           // downloads a file to the current directory and adds its URL+ETag in dotnet-config
+dotnet file add [url] [file]    // downloads the url to the (relative) file local path specifed and adds
+                                // its URL+ETag in dotnet-config
+dotnet file add [url] .         // downloads the url to the current directory and stores URL+ETag in dotnet-config, 
+                                // ignoring the source directory structure
+dotnet file add [url] docs/     // downloads the url to the specified directory, preserving the source directory structure
+dotnet file add [url] docs/.    // downloads the url to the specified directory, flattening the source directory structure
+dotnet file update [file]       // updates a specific file, based on its dotnet-config configuration
+dotnet file update [url]        // updates a specific file by its url, based on its dotnet-config configuration
+dotnet file update              // updates all recorded files, according to the dotnet-config configuration
+dotnet file sync                // just like update, but also prunes files/folders removed from their remote urls
+dotnet file delete [file]       // deletes a local file and its entry in .netconfig
+dotnet file list                // lists all configured files
+dotnet file changes             // lists all configured files and their status with regards to the configured 
+                                // remote URL and ETag matching
+</code></pre></div></div>
+
+<blockquote>
+  <p>NOTE: to download a file from GitHub to the current directory, ignoring the remote folder structure, 
+specify <code class="language-plaintext highlighter-rouge">.</code> as the <code class="language-plaintext highlighter-rouge">[file]</code> argument after the <code class="language-plaintext highlighter-rouge">[url]</code>. Otherwise, the default will be to match the 
+directory structure of the source file.</p>
+</blockquote>
+
+<p>After downloading a file, a new entry is created in a local <code class="language-plaintext highlighter-rouge">.netconfig</code> file, which
+leverages <a href="https://github.com/kzu/dotnet-config">dotnet config</a>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[file "relative file path"]
+  url = [url]
+  etag = [etag]
+</code></pre></div></div>
+
+<p>This information is used to later update the file contents if necessary, by issuing a 
+conditional http get to retrieve updates. It’s generally advisable to commit the .netconfig file 
+to source control, so that updating is simply a matter of running <code class="language-plaintext highlighter-rouge">dotnet file update</code>.</p>
+
+<blockquote>
+  <p>Note: <code class="language-plaintext highlighter-rouge">dotnet file update [url]</code> behaves just like <code class="language-plaintext highlighter-rouge">dotnet file add [url]</code> when a matching 
+entry for the file isn’t found in the <code class="language-plaintext highlighter-rouge">.netconfig</code> file.</p>
+</blockquote>
+
+<p>If you want to skip further synchronization of a file, you can add <code class="language-plaintext highlighter-rouge">skip</code> to the entire:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[file "readme.md"]
+  url = [url]
+  skip
+</code></pre></div></div>
+
+<p>Symbols are used to denote actions (pending or performed) on files:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">√</code>: file has no pending updated (ETag matches) or it was just downloaded successfully.</li>
+  <li><code class="language-plaintext highlighter-rouge">^</code>: file has pending updates (ETag doesn’t match the remote).</li>
+  <li><code class="language-plaintext highlighter-rouge">=</code>: no changes to file were necessary in an update</li>
+  <li><code class="language-plaintext highlighter-rouge">?</code>: file not found locally. A new version can be downloaded from the remote.</li>
+  <li><code class="language-plaintext highlighter-rouge">x</code>: could not update file or refresh ETag status, with reason noted in subsequent line.</li>
+</ul>
+
+<p>Downloading entire repositories or specific directories within them is supported through the 
+<a href="https://cli.github.com/manual/installation">GitHub CLI</a>, which must be installed previously. 
+You can verify you have the property authentication and access in place by running the following 
+GH CLI command:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gh repo view org/repo
+</code></pre></div></div>
+
+<p>If you can view the output (would be the README from the repo), you can download files from it
+with <code class="language-plaintext highlighter-rouge">dotnet-file</code>.</p>
+
+<p>Private repositories are supported from GitHub and BitBucket through the 
+<a href="https://github.blog/2020-07-02-git-credential-manager-core-building-a-universal-authentication-experience/">Git Credentials Manager Core</a> 
+project.</p>
+
+<p>When adding a file, it’s possible to customize the local file location by specifying an absolute 
+or relative file path, as follows:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">src/External/File.cs</code>: fully custom target file path, doesn’t need to match source URI file name 
+or directory structure.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/External/</code>: use the given directory as the base directory, but otherwise preserve the source 
+URI directory structure and file name.</li>
+  <li><code class="language-plaintext highlighter-rouge">src/External/.</code>: download to the given directory, without recreating source URI directory structure, 
+using the source file name only.</li>
+  <li><code class="language-plaintext highlighter-rouge">.</code> (a single dot character as the target path): download to the current directory, don’t preserve 
+source URI directory structure, use source file name only.</li>
+</ul>
+
+<p>Concrete examples:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; dotnet file add https://github.com/devlooped/dotnet-file/blob/main/azure-pipelines.yml
+azure-pipelines.yml √ &lt;- https://github.com/devlooped/dotnet-file/blob/main/azure-pipelines.yml
+
+&gt; dotnet file add https://github.com/devlooped/dotnet-file/blob/main/docs/img/icon.png img/icon.png
+img/icon.png √ &lt;- https://github.com/devlooped/dotnet-file/blob/main/docs/img/icon.png
+
+&gt; dotnet file list
+azure-pipelines.yml = &lt;- https://github.com/devlooped/dotnet-file/blob/main/azure-pipelines.yml
+img/icon.png        = &lt;- https://github.com/devlooped/dotnet-file/blob/main/docs/img/icon.png
+
+&gt; del img\icon.png
+&gt; dotnet file list
+azure-pipelines.yml = &lt;- https://github.com/devlooped/dotnet-file/blob/main/azure-pipelines.yml
+img/icon.png        ? &lt;- https://github.com/devlooped/dotnet-file/blob/main/docs/img/icon.png
+
+# missing file downloaded successfully
+&gt; dotnet file update
+azure-pipelines.yml = &lt;- https://github.com/devlooped/dotnet-file/blob/main/azure-pipelines.yml
+img/icon.png        √ &lt;- https://github.com/devlooped/dotnet-file/blob/main/docs/img/icon.png
+
+# file updated on remote, changes detected
+&gt; dotnet file changes
+azure-pipelines.yml ^ &lt;- https://github.com/devlooped/dotnet-file/blob/main/azure-pipelines.yml
+img/icon.png        = &lt;- https://github.com/devlooped/dotnet-file/blob/main/docs/img/icon.png
+
+# file renamed or deleted from remote
+&gt; dotnet file changes
+azure-pipelines.yml = &lt;- https://github.com/devlooped/dotnet-file/raw/main/azure-pipelines.yml
+img/icon.png        x &lt;- https://github.com/devlooped/dotnet-file/blob/main/docs/img/icon.png
+                         404: Not Found
+
+# download entire directory to local dir matching remote folder structure
+&gt; dotnet file add https://github.com/dotnet/runtime/tree/main/docs/coding-guidelines/api-guidelines
+api-guidelines  =&gt; fetching via gh cli...
+docs/coding-guidelines/api-guidelines/README.md        √ &lt;- https://github.com/dotnet/runtime/main/docs/coding-guidelines/api-guidelines/README.md
+docs/coding-guidelines/api-guidelines/System.Memory.md √ &lt;- https://github.com/dotnet/runtime/main/docs/coding-guidelines/api-guidelines/System.Memory.md
+docs/coding-guidelines/api-guidelines/nullability.md   √ &lt;- https://github.com/dotnet/runtime/main/docs/coding-guidelines/api-guidelines/nullability.md
+...
+
+# download entire directory to a local subdirectory, from where dir structure will match remote structure
+&gt; dotnet file add https://github.com/dotnet/runtime/tree/main/docs/coding-guidelines/api-guidelines external/dotnet/
+external/dotnet/ =&gt; fetching via gh cli...
+external/dotnet/docs/coding-guidelines/api-guidelines/README.md        √ &lt;- https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/api-guidelines/README.md
+external/dotnet/docs/coding-guidelines/api-guidelines/System.Memory.md √ &lt;- https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/api-guidelines/System.Memory.md
+external/dotnet/docs/coding-guidelines/api-guidelines/nullability.md   √ &lt;- https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/api-guidelines/nullability.md
+...
+</code></pre></div></div>
+
+<h1 id="dogfooding">Dogfooding</h1>
+
+<p><a href="https://github.com/devlooped/dotnet-file/actions?query=branch%3Amain+workflow%3Abuild+"><img src="https://github.com/devlooped/dotnet-file/workflows/build/badge.svg?branch=main" alt="CI Status" /></a>
+<a href="https://pkg.kzu.io/index.json"><img src="https://img.shields.io/endpoint?url=https://shields.kzu.io/vpre/dotnet-file/main&amp;label=nuget.ci&amp;color=brightgreen" alt="CI Version" /></a></p>
+
+<p>We also produce CI packages from branches and pull requests so you can dogfood builds as quickly as they are produced.</p>
+
+<p>The CI feed is <code class="language-plaintext highlighter-rouge">https://pkg.kzu.io/index.json</code>.</p>
+
+<p>The versioning scheme for packages is:</p>
+
+<ul>
+  <li>PR builds: <em>42.42.42-pr</em><code class="language-plaintext highlighter-rouge">[NUMBER]</code></li>
+  <li>Branch builds: <em>42.42.42-</em><code class="language-plaintext highlighter-rouge">[BRANCH]</code>.<code class="language-plaintext highlighter-rouge">[COMMITS]</code></li>
+</ul>
+
+<!-- include docs/footer.md -->
+<h1 id="sponsors">Sponsors</h1>
+
+<!-- sponsors.md -->
+<p><a href="https://github.com/KirillOsenkov"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/KirillOsenkov.png" alt="Kirill Osenkov" title="Kirill Osenkov" /></a>
+<a href="https://github.com/augustoproiete"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/augustoproiete.png" alt="C. Augusto Proiete" title="C. Augusto Proiete" /></a>
+<a href="https://github.com/sandrock"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/sandrock.png" alt="SandRock" title="SandRock" /></a>
+<a href="https://github.com/aws"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/aws.png" alt="Amazon Web Services" title="Amazon Web Services" /></a>
+<a href="https://github.com/MelbourneDeveloper"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/MelbourneDeveloper.png" alt="Christian Findlay" title="Christian Findlay" /></a>
+<a href="https://github.com/clarius"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/clarius.png" alt="Clarius Org" title="Clarius Org" /></a>
+<a href="https://github.com/MFB-Technologies-Inc"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/.github/avatars/MFB-Technologies-Inc.png" alt="MFB Technologies, Inc." title="MFB Technologies, Inc." /></a></p>
+
+<!-- sponsors.md -->
+
+<p><a href="https://github.com/sponsors/devlooped"><img src="https://raw.githubusercontent.com/devlooped/sponsors/main/sponsor.png" alt="Sponsor this project" title="Sponsor this project" /></a>
+ </p>
+
+<p><a href="https://github.com/sponsors">Learn more about GitHub Sponsors</a></p>
+
+<!-- docs/footer.md -->
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        
+        <p class="copyright">dotnet-file maintained by <a href="https://github.com/devlooped">devlooped</a></p>
+        
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+  </body>
+</html>
